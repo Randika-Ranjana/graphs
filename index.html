@@ -4,21 +4,117 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rotti Analytics Dashboard</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.js" onload="console.log('Recharts loaded via JSDelivr:', typeof Recharts, typeof window.Recharts)" onerror="loadRechartsBackup()"></script>
+    <script>
+      function loadRechartsBackup() {
+        console.log('Primary Recharts failed, trying backup...');
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/recharts@2.5.0/umd/Recharts.js';
+        script.onload = () => console.log('Recharts backup loaded:', typeof Recharts, typeof window.Recharts);
+        document.head.appendChild(script);
+      }
+    </script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState } = React;
-        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, ComposedChart, Area, AreaChart } = Recharts;
+        function initializeApp() {
+          console.log('Checking libraries...', {
+            React: typeof React,
+            ReactDOM: typeof ReactDOM, 
+            Recharts: typeof Recharts,
+            window_Recharts: typeof window.Recharts,
+            global_keys: Object.keys(window).filter(k => k.toLowerCase().includes('recharts'))
+          });
+
+          // Try multiple ways to access Recharts
+          let RechartsLib = window.Recharts || Recharts || window.recharts;
+          
+          // If still not found, check all window properties for recharts
+          if (!RechartsLib) {
+            for (let key in window) {
+              if (key.toLowerCase().includes('recharts') && typeof window[key] === 'object') {
+                RechartsLib = window[key];
+                console.log('Found Recharts as:', key);
+                break;
+              }
+            }
+          }
+          
+          if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || !RechartsLib) {
+            console.error('Required libraries not loaded. Available:', {
+              React: typeof React,
+              ReactDOM: typeof ReactDOM, 
+              Recharts: typeof Recharts,
+              window_Recharts: typeof window.Recharts,
+              RechartsLib: typeof RechartsLib
+            });
+            
+            // Retry after a longer delay
+            setTimeout(() => {
+              console.log('Retrying in 2 seconds...');
+              initializeApp();
+            }, 2000);
+            return;
+          }
+
+          const { useState } = React;
+          const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, ComposedChart, Area, AreaChart } = RechartsLib;
 
         const RottiGraphs = () => {
-          const [selectedChart, setSelectedChart] = useState('line');
+          // Removed chart selector - using line charts for main and individual, bar for yearly
 
           // Prepare data for charts
           const chartData = [
@@ -93,342 +189,1452 @@
           const CustomTooltip = ({ active, payload, label }) => {
             if (active && payload && payload.length) {
               return React.createElement('div', { 
-                className: "bg-white p-3 border border-gray-300 rounded shadow-lg",
-                style: { backgroundColor: 'white', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }
+                className: "chart-container rounded-xl shadow-2xl",
+                style: { 
+                  padding: '16px', 
+                  borderRadius: '12px', 
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)'
+                }
               }, [
-                React.createElement('p', { key: 'label', style: { fontWeight: 'bold', marginBottom: '8px' } }, label),
+                React.createElement('p', { 
+                  key: 'label', 
+                  style: { 
+                    fontWeight: '600', 
+                    marginBottom: '10px', 
+                    fontSize: '14px',
+                    color: '#374151'
+                  } 
+                }, label),
                 ...payload.map((entry, index) => 
-                  React.createElement('p', { 
-                    key: index, 
-                    style: { color: entry.color, margin: '4px 0' } 
-                  }, `${entry.name}: ${entry.value?.toLocaleString() || 'No data'}`)
+                  React.createElement('div', {
+                    key: index,
+                    style: { 
+                      display: 'flex',
+                      alignItems: 'center',
+                      margin: '6px 0'
+                    }
+                  }, [
+                    React.createElement('div', {
+                      key: 'dot',
+                      style: {
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: entry.color,
+                        marginRight: '8px'
+                      }
+                    }),
+                    React.createElement('span', {
+                      key: 'text',
+                      style: { 
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#374151'
+                      }
+                    }, `${entry.name}: ${entry.value?.toLocaleString() || 'No data'}`)
+                  ])
                 )
               ]);
             }
             return null;
           };
 
-          return React.createElement('div', { className: "p-6 bg-gray-50 min-h-screen" }, [
-            React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto" }, [
+          return React.createElement('div', { className: "p-6 min-h-screen" }, [
+            React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto animate-fade-in" }, [
               React.createElement('h1', {
                 key: 'title',
-                className: "text-3xl font-bold text-center mb-8 text-gray-800"
+                className: "text-4xl font-bold text-center mb-12 text-white gradient-text"
               }, 'Rotti Sales Analytics Dashboard'),
               
-              // Chart Type Selector
-              React.createElement('div', { key: 'selector', className: "flex justify-center mb-6 space-x-4" }, [
-                ['line', 'Line Chart'],
-                ['area', 'Area Chart'],
-                ['bar', 'Bar Chart']
-              ].map(([type, label]) =>
-                React.createElement('button', {
-                  key: type,
-                  onClick: () => setSelectedChart(type),
-                  className: `px-4 py-2 rounded-lg font-semibold ${
-                    selectedChart === type 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white text-gray-700 border border-gray-300'
-                  }`
-                }, label)
-              )),
 
-              // Main Chart
-              React.createElement('div', { key: 'main-chart', className: "bg-white rounded-lg shadow-lg p-6 mb-8" }, [
+
+              // Main Chart - Advanced Line Chart
+              React.createElement('div', { key: 'main-chart', className: "chart-container rounded-xl shadow-2xl p-8 mb-8 hover-scale" }, [
                 React.createElement('h2', {
                   key: 'main-title',
-                  className: "text-xl font-semibold mb-4 text-gray-800"
+                  className: "text-2xl font-bold mb-6 gradient-text"
                 }, 'Monthly Sales Trends (2022-2025)'),
-                React.createElement('div', { key: 'main-chart-container', style: { width: '100%', height: '400px' } },
+                React.createElement('div', { key: 'main-chart-container', style: { width: '100%', height: '600px' } },
                   React.createElement(ResponsiveContainer, {},
-                    selectedChart === 'line' ? 
-                      React.createElement(LineChart, { data: cleanData, margin: { top: 5, right: 30, left: 20, bottom: 5 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 80,
-                          fontSize: 12
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Legend, { key: 'legend' }),
-                        React.createElement(Line, {
-                          key: 'veg-line',
-                          type: "monotone",
-                          dataKey: "veg",
-                          stroke: "#28a745",
-                          strokeWidth: 3,
-                          name: "Vegetarian Rotti",
-                          connectNulls: false,
-                          dot: { r: 4 }
-                        }),
-                        React.createElement(Line, {
-                          key: 'chicken-line',
-                          type: "monotone",
-                          dataKey: "chicken",
-                          stroke: "#fd7e14",
-                          strokeWidth: 3,
-                          name: "Chicken Rotti",
-                          connectNulls: false,
-                          dot: { r: 4 }
-                        }),
-                        React.createElement(Line, {
-                          key: 'fish-line',
-                          type: "monotone",
-                          dataKey: "fish",
-                          stroke: "#20c997",
-                          strokeWidth: 3,
-                          name: "Fish Rotti",
-                          connectNulls: false,
-                          dot: { r: 4 }
-                        })
-                      ]) :
-                    selectedChart === 'area' ?
-                      React.createElement(AreaChart, { data: cleanData, margin: { top: 5, right: 30, left: 20, bottom: 5 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 80,
-                          fontSize: 12
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Legend, { key: 'legend' }),
-                        React.createElement(Area, {
-                          key: 'veg-area',
-                          type: "monotone",
-                          dataKey: "veg",
-                          stackId: "1",
-                          stroke: "#28a745",
-                          fill: "#28a74530",
-                          name: "Vegetarian Rotti"
-                        }),
-                        React.createElement(Area, {
-                          key: 'chicken-area',
-                          type: "monotone",
-                          dataKey: "chicken",
-                          stackId: "1",
-                          stroke: "#fd7e14",
-                          fill: "#fd7e1430",
-                          name: "Chicken Rotti"
-                        }),
-                        React.createElement(Area, {
-                          key: 'fish-area',
-                          type: "monotone",
-                          dataKey: "fish",
-                          stackId: "1",
-                          stroke: "#20c997",
-                          fill: "#20c99730",
-                          name: "Fish Rotti"
-                        })
-                      ]) :
-                      React.createElement(BarChart, { data: cleanData, margin: { top: 5, right: 30, left: 20, bottom: 5 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 80,
-                          fontSize: 12
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Legend, { key: 'legend' }),
-                        React.createElement(Bar, { key: 'veg-bar', dataKey: "veg", fill: "#28a745", name: "Vegetarian Rotti" }),
-                        React.createElement(Bar, { key: 'chicken-bar', dataKey: "chicken", fill: "#fd7e14", name: "Chicken Rotti" }),
-                        React.createElement(Bar, { key: 'fish-bar', dataKey: "fish", fill: "#20c997", name: "Fish Rotti" })
-                      ])
-                  )
-                )
-              ]),
-
-              // Individual Rotti Charts
-              React.createElement('div', { key: 'individual-charts', className: "grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" }, [
-                // Vegetarian Chart
-                React.createElement('div', { key: 'veg-chart', className: "bg-white rounded-lg shadow-lg p-6" }, [
-                  React.createElement('h3', {
-                    key: 'veg-title',
-                    className: "text-lg font-semibold mb-4 text-green-800 border-b-2 border-green-200 pb-2"
-                  }, 'Vegetarian Rotti (611 & 651)'),
-                  React.createElement('div', { key: 'veg-chart-container', style: { width: '100%', height: '250px' } },
-                    React.createElement(ResponsiveContainer, {},
-                      React.createElement(LineChart, { data: cleanData, margin: { top: 5, right: 10, left: 10, bottom: 40 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 60,
-                          fontSize: 10,
-                          interval: 2
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber, fontSize: 10 }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Line, {
-                          key: 'line',
-                          type: "monotone",
-                          dataKey: "veg",
-                          stroke: "#28a745",
-                          strokeWidth: 2,
-                          name: "Vegetarian Rotti",
-                          connectNulls: false,
-                          dot: { r: 3, fill: '#28a745' },
-                          activeDot: { r: 5, fill: '#1e7e34' }
-                        })
-                      ])
-                    )
-                  ),
-                  React.createElement('div', { key: 'veg-stats', className: "mt-3 text-center" }, [
-                    React.createElement('p', { key: 'peak', className: "text-2xl font-bold text-green-700" }, '36.8k'),
-                    React.createElement('p', { key: 'desc', className: "text-sm text-green-600" }, 'Peak: Mar 2025')
-                  ])
-                ]),
-
-                // Chicken Chart
-                React.createElement('div', { key: 'chicken-chart', className: "bg-white rounded-lg shadow-lg p-6" }, [
-                  React.createElement('h3', {
-                    key: 'chicken-title',
-                    className: "text-lg font-semibold mb-4 text-orange-800 border-b-2 border-orange-200 pb-2"
-                  }, 'Chicken Rotti (618 & 649)'),
-                  React.createElement('div', { key: 'chicken-chart-container', style: { width: '100%', height: '250px' } },
-                    React.createElement(ResponsiveContainer, {},
-                      React.createElement(LineChart, { data: cleanData, margin: { top: 5, right: 10, left: 10, bottom: 40 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 60,
-                          fontSize: 10,
-                          interval: 2
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber, fontSize: 10 }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Line, {
-                          key: 'line',
-                          type: "monotone",
-                          dataKey: "chicken",
-                          stroke: "#fd7e14",
-                          strokeWidth: 2,
-                          name: "Chicken Rotti",
-                          connectNulls: false,
-                          dot: { r: 3, fill: '#fd7e14' },
-                          activeDot: { r: 5, fill: '#e8590c' }
-                        })
-                      ])
-                    )
-                  ),
-                  React.createElement('div', { key: 'chicken-stats', className: "mt-3 text-center" }, [
-                    React.createElement('p', { key: 'peak', className: "text-2xl font-bold text-orange-700" }, '35.6k'),
-                    React.createElement('p', { key: 'desc', className: "text-sm text-orange-600" }, 'Peak: Mar 2025')
-                  ])
-                ]),
-
-                // Fish Chart
-                React.createElement('div', { key: 'fish-chart', className: "bg-white rounded-lg shadow-lg p-6" }, [
-                  React.createElement('h3', {
-                    key: 'fish-title',
-                    className: "text-lg font-semibold mb-4 text-teal-800 border-b-2 border-teal-200 pb-2"
-                  }, 'Fish Rotti (604 & 933)'),
-                  React.createElement('div', { key: 'fish-chart-container', style: { width: '100%', height: '250px' } },
-                    React.createElement(ResponsiveContainer, {},
-                      React.createElement(LineChart, { data: cleanData, margin: { top: 5, right: 10, left: 10, bottom: 40 } }, [
-                        React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                        React.createElement(XAxis, { 
-                          key: 'xaxis',
-                          dataKey: "month", 
-                          stroke: "#666",
-                          angle: -45,
-                          textAnchor: "end",
-                          height: 60,
-                          fontSize: 10,
-                          interval: 2
-                        }),
-                        React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber, fontSize: 10 }),
-                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                        React.createElement(Line, {
-                          key: 'line',
-                          type: "monotone",
-                          dataKey: "fish",
-                          stroke: "#20c997",
-                          strokeWidth: 2,
-                          name: "Fish Rotti",
-                          connectNulls: false,
-                          dot: { r: 3, fill: '#20c997' },
-                          activeDot: { r: 5, fill: '#17a2b8' }
-                        })
-                      ])
-                    )
-                  ),
-                  React.createElement('div', { key: 'fish-stats', className: "mt-3 text-center" }, [
-                    React.createElement('p', { key: 'peak', className: "text-2xl font-bold text-teal-700" }, '33.1k'),
-                    React.createElement('p', { key: 'desc', className: "text-sm text-teal-600" }, 'Peak: Jan 2025')
-                  ])
-                ])
-              ]),
-
-              // Yearly Summary
-              React.createElement('div', { key: 'yearly-summary', className: "bg-white rounded-lg shadow-lg p-6 mb-8" }, [
-                React.createElement('h2', {
-                  key: 'yearly-title',
-                  className: "text-xl font-semibold mb-4 text-gray-800"
-                }, 'Yearly Sales Summary'),
-                React.createElement('div', { key: 'yearly-chart-container', style: { width: '100%', height: '300px' } },
-                  React.createElement(ResponsiveContainer, {},
-                    React.createElement(BarChart, { data: yearlyData, margin: { top: 5, right: 30, left: 20, bottom: 5 } }, [
-                      React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "3 3", stroke: "#f0f0f0" }),
-                      React.createElement(XAxis, { key: 'xaxis', dataKey: "year", stroke: "#666" }),
-                      React.createElement(YAxis, { key: 'yaxis', stroke: "#666", tickFormatter: formatNumber }),
+                    React.createElement(LineChart, { 
+                      data: cleanData, 
+                      margin: { top: 20, right: 40, left: 20, bottom: 80 }
+                    }, [
+                      React.createElement('defs', { key: 'defs' }, [
+                        React.createElement('linearGradient', { key: 'vegGrad', id: 'vegGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.8 }),
+                          React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.1 })
+                        ]),
+                        React.createElement('linearGradient', { key: 'chickenGrad', id: 'chickenGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.8 }),
+                          React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.1 })
+                        ]),
+                        React.createElement('linearGradient', { key: 'fishGrad', id: 'fishGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.8 }),
+                          React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.1 })
+                        ])
+                      ]),
+                      React.createElement(CartesianGrid, { 
+                        key: 'grid', 
+                        strokeDasharray: "1 3", 
+                        stroke: "#E5E7EB",
+                        opacity: 0.6
+                      }),
+                      React.createElement(XAxis, { 
+                        key: 'xaxis',
+                        dataKey: "month", 
+                        stroke: "#6B7280",
+                        angle: -45,
+                        textAnchor: "end",
+                        height: 80,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        tick: { fill: '#6B7280' }
+                      }),
+                      React.createElement(YAxis, { 
+                        key: 'yaxis', 
+                        stroke: "#6B7280", 
+                        tickFormatter: formatNumber,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        tick: { fill: '#6B7280' }
+                      }),
                       React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
-                      React.createElement(Legend, { key: 'legend' }),
-                      React.createElement(Bar, { key: 'veg-bar', dataKey: "veg", fill: "#28a745", name: "Vegetarian Rotti" }),
-                      React.createElement(Bar, { key: 'chicken-bar', dataKey: "chicken", fill: "#fd7e14", name: "Chicken Rotti" }),
-                      React.createElement(Bar, { key: 'fish-bar', dataKey: "fish", fill: "#20c997", name: "Fish Rotti" })
+                      React.createElement(Legend, { 
+                        key: 'legend',
+                        wrapperStyle: { paddingTop: '20px', fontSize: '14px', fontWeight: '500' }
+                      }),
+                      React.createElement(Line, {
+                        key: 'veg-line',
+                        type: "monotone",
+                        dataKey: "veg",
+                        stroke: "#10B981",
+                        strokeWidth: 4,
+                        name: "Vegetarian Rotti",
+                        connectNulls: false,
+                        dot: { r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                        activeDot: { r: 7, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                      }),
+                      React.createElement(Line, {
+                        key: 'chicken-line',
+                        type: "monotone",
+                        dataKey: "chicken",
+                        stroke: "#F59E0B",
+                        strokeWidth: 4,
+                        name: "Chicken Rotti",
+                        connectNulls: false,
+                        dot: { r: 5, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                        activeDot: { r: 7, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                      }),
+                      React.createElement(Line, {
+                        key: 'fish-line',
+                        type: "monotone",
+                        dataKey: "fish",
+                        stroke: "#06B6D4",
+                        strokeWidth: 4,
+                        name: "Fish Rotti",
+                        connectNulls: false,
+                        dot: { r: 5, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                        activeDot: { r: 7, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                      })
                     ])
                   )
                 )
               ]),
 
-              // Key Insights
-              React.createElement('div', { key: 'insights', className: "grid grid-cols-1 md:grid-cols-3 gap-6" }, [
-                React.createElement('div', { key: 'veg-insight', className: "bg-green-50 border-l-4 border-green-500 rounded-lg p-6" }, [
-                  React.createElement('h3', { key: 'title', className: "text-lg font-semibold text-green-800 mb-2" }, 'Vegetarian Rotti'),
-                  React.createElement('p', { key: 'desc', className: "text-green-700" }, 'Consistently highest sales volume'),
-                  React.createElement('p', { key: 'value', className: "text-2xl font-bold text-green-800 mt-2" }, '36.8k'),
-                  React.createElement('p', { key: 'peak', className: "text-sm text-green-600" }, 'Peak: Mar 2025')
+              // Individual Rotti Charts - Enhanced Line Charts (2 per row for bigger width)
+              React.createElement('div', { key: 'individual-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8" }, [
+                // Vegetarian Chart
+                React.createElement('div', { key: 'veg-chart', className: "chart-container rounded-xl shadow-xl p-6 hover-scale" }, [
+                  React.createElement('h3', {
+                    key: 'veg-title',
+                    className: "text-xl font-bold mb-4 text-emerald-700 border-b-2 border-emerald-200 pb-3"
+                  }, 'Vegetarian Rotti (611 & 651)'),
+                  React.createElement('div', { key: 'veg-chart-container', style: { width: '100%', height: '500px' } },
+                    React.createElement(ResponsiveContainer, {},
+                      React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
+                        React.createElement('defs', { key: 'defs' }, [
+                          React.createElement('linearGradient', { key: 'vegArea', id: 'vegAreaGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                            React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.3 }),
+                            React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.05 })
+                          ])
+                        ]),
+                        React.createElement(CartesianGrid, { 
+                          key: 'grid', 
+                          strokeDasharray: "1 2", 
+                          stroke: "#E5E7EB",
+                          opacity: 0.4
+                        }),
+                        React.createElement(XAxis, { 
+                          key: 'xaxis',
+                          dataKey: "month", 
+                          stroke: "#6B7280",
+                          angle: -45,
+                          textAnchor: "end",
+                          height: 60,
+                          fontSize: 9,
+                          interval: 3,
+                          fontWeight: 500
+                        }),
+                        React.createElement(YAxis, { 
+                          key: 'yaxis', 
+                          stroke: "#6B7280", 
+                          tickFormatter: formatNumber, 
+                          fontSize: 10,
+                          fontWeight: 500
+                        }),
+                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                        React.createElement(Area, {
+                          key: 'area',
+                          type: "monotone",
+                          dataKey: "veg",
+                          stroke: "none",
+                          fill: "url(#vegAreaGradient)",
+                          connectNulls: false
+                        }),
+                        React.createElement(Line, {
+                          key: 'line',
+                          type: "monotone",
+                          dataKey: "veg",
+                          stroke: "#10B981",
+                          strokeWidth: 3,
+                          name: "Vegetarian Rotti",
+                          connectNulls: false,
+                          dot: { r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                          activeDot: { r: 6, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                        })
+                      ])
+                    )
+                  ),
+                  React.createElement('div', { key: 'veg-stats', className: "mt-4 text-center bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-3" }, [
+                    React.createElement('p', { key: 'peak', className: "text-3xl font-bold text-emerald-700" }, '36.8k'),
+                    React.createElement('p', { key: 'desc', className: "text-sm text-emerald-600 font-medium" }, 'Peak: Mar 2025')
+                  ])
                 ]),
-                React.createElement('div', { key: 'chicken-insight', className: "bg-orange-50 border-l-4 border-orange-500 rounded-lg p-6" }, [
-                  React.createElement('h3', { key: 'title', className: "text-lg font-semibold text-orange-800 mb-2" }, 'Chicken Rotti'),
-                  React.createElement('p', { key: 'desc', className: "text-orange-700" }, 'Strong growth trajectory'),
-                  React.createElement('p', { key: 'value', className: "text-2xl font-bold text-orange-800 mt-2" }, '35.6k'),
-                  React.createElement('p', { key: 'peak', className: "text-sm text-orange-600" }, 'Peak: Mar 2025')
+
+                // Chicken Chart
+                React.createElement('div', { key: 'chicken-chart', className: "chart-container rounded-xl shadow-xl p-6 hover-scale" }, [
+                  React.createElement('h3', {
+                    key: 'chicken-title',
+                    className: "text-xl font-bold mb-4 text-amber-700 border-b-2 border-amber-200 pb-3"
+                  }, 'Chicken Rotti (618 & 649)'),
+                  React.createElement('div', { key: 'chicken-chart-container', style: { width: '100%', height: '500px' } },
+                    React.createElement(ResponsiveContainer, {},
+                      React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
+                        React.createElement('defs', { key: 'defs' }, [
+                          React.createElement('linearGradient', { key: 'chickenArea', id: 'chickenAreaGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                            React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.3 }),
+                            React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.05 })
+                          ])
+                        ]),
+                        React.createElement(CartesianGrid, { 
+                          key: 'grid', 
+                          strokeDasharray: "1 2", 
+                          stroke: "#E5E7EB",
+                          opacity: 0.4
+                        }),
+                        React.createElement(XAxis, { 
+                          key: 'xaxis',
+                          dataKey: "month", 
+                          stroke: "#6B7280",
+                          angle: -45,
+                          textAnchor: "end",
+                          height: 60,
+                          fontSize: 9,
+                          interval: 3,
+                          fontWeight: 500
+                        }),
+                        React.createElement(YAxis, { 
+                          key: 'yaxis', 
+                          stroke: "#6B7280", 
+                          tickFormatter: formatNumber, 
+                          fontSize: 10,
+                          fontWeight: 500
+                        }),
+                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                        React.createElement(Area, {
+                          key: 'area',
+                          type: "monotone",
+                          dataKey: "chicken",
+                          stroke: "none",
+                          fill: "url(#chickenAreaGradient)",
+                          connectNulls: false
+                        }),
+                        React.createElement(Line, {
+                          key: 'line',
+                          type: "monotone",
+                          dataKey: "chicken",
+                          stroke: "#F59E0B",
+                          strokeWidth: 3,
+                          name: "Chicken Rotti",
+                          connectNulls: false,
+                          dot: { r: 4, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                          activeDot: { r: 6, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                        })
+                      ])
+                    )
+                  ),
+                  React.createElement('div', { key: 'chicken-stats', className: "mt-4 text-center bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3" }, [
+                    React.createElement('p', { key: 'peak', className: "text-3xl font-bold text-amber-700" }, '35.6k'),
+                    React.createElement('p', { key: 'desc', className: "text-sm text-amber-600 font-medium" }, 'Peak: Mar 2025')
+                  ])
                 ]),
-                React.createElement('div', { key: 'fish-insight', className: "bg-teal-50 border-l-4 border-teal-500 rounded-lg p-6" }, [
-                  React.createElement('h3', { key: 'title', className: "text-lg font-semibold text-teal-800 mb-2" }, 'Fish Rotti'),
-                  React.createElement('p', { key: 'desc', className: "text-teal-700" }, 'Steady moderate performance'),
-                  React.createElement('p', { key: 'value', className: "text-2xl font-bold text-teal-800 mt-2" }, '33.1k'),
-                  React.createElement('p', { key: 'peak', className: "text-sm text-teal-600" }, 'Peak: Jan 2025')
+
+                // Fish Chart
+                React.createElement('div', { key: 'fish-chart', className: "chart-container rounded-xl shadow-xl p-6 hover-scale" }, [
+                  React.createElement('h3', {
+                    key: 'fish-title',
+                    className: "text-xl font-bold mb-4 text-cyan-700 border-b-2 border-cyan-200 pb-3"
+                  }, 'Fish Rotti (604 & 933)'),
+                  React.createElement('div', { key: 'fish-chart-container', style: { width: '100%', height: '500px' } },
+                    React.createElement(ResponsiveContainer, {},
+                      React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
+                        React.createElement('defs', { key: 'defs' }, [
+                          React.createElement('linearGradient', { key: 'fishArea', id: 'fishAreaGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                            React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.3 }),
+                            React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.05 })
+                          ])
+                        ]),
+                        React.createElement(CartesianGrid, { 
+                          key: 'grid', 
+                          strokeDasharray: "1 2", 
+                          stroke: "#E5E7EB",
+                          opacity: 0.4
+                        }),
+                        React.createElement(XAxis, { 
+                          key: 'xaxis',
+                          dataKey: "month", 
+                          stroke: "#6B7280",
+                          angle: -45,
+                          textAnchor: "end",
+                          height: 60,
+                          fontSize: 9,
+                          interval: 3,
+                          fontWeight: 500
+                        }),
+                        React.createElement(YAxis, { 
+                          key: 'yaxis', 
+                          stroke: "#6B7280", 
+                          tickFormatter: formatNumber, 
+                          fontSize: 10,
+                          fontWeight: 500
+                        }),
+                        React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                        React.createElement(Area, {
+                          key: 'area',
+                          type: "monotone",
+                          dataKey: "fish",
+                          stroke: "none",
+                          fill: "url(#fishAreaGradient)",
+                          connectNulls: false
+                        }),
+                        React.createElement(Line, {
+                          key: 'line',
+                          type: "monotone",
+                          dataKey: "fish",
+                          stroke: "#06B6D4",
+                          strokeWidth: 3,
+                          name: "Fish Rotti",
+                          connectNulls: false,
+                          dot: { r: 4, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                          activeDot: { r: 6, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                        })
+                      ])
+                    )
+                  ),
+                  React.createElement('div', { key: 'fish-stats', className: "mt-4 text-center bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg p-3" }, [
+                    React.createElement('p', { key: 'peak', className: "text-3xl font-bold text-cyan-700" }, '33.1k'),
+                    React.createElement('p', { key: 'desc', className: "text-sm text-cyan-600 font-medium" }, 'Peak: Jan 2025')
+                  ])
+                ])
+              ]),
+
+              // Yearly Summary - Advanced Bar Chart
+              React.createElement('div', { key: 'yearly-summary', className: "chart-container rounded-xl shadow-2xl p-8 mb-8 hover-scale" }, [
+                React.createElement('h2', {
+                  key: 'yearly-title',
+                  className: "text-2xl font-bold mb-6 gradient-text text-center"
+                }, 'Yearly Sales Summary'),
+                React.createElement('div', { key: 'yearly-chart-container', style: { width: '100%', height: '500px' } },
+                  React.createElement(ResponsiveContainer, {},
+                    React.createElement(BarChart, { 
+                      data: yearlyData, 
+                      margin: { top: 20, right: 40, left: 20, bottom: 20 },
+                      barCategoryGap: '20%'
+                    }, [
+                      React.createElement('defs', { key: 'defs' }, [
+                        React.createElement('linearGradient', { key: 'vegBarGrad', id: 'vegBarGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '0%', stopColor: '#10B981', stopOpacity: 0.9 }),
+                          React.createElement('stop', { key: 'stop2', offset: '100%', stopColor: '#059669', stopOpacity: 0.8 })
+                        ]),
+                        React.createElement('linearGradient', { key: 'chickenBarGrad', id: 'chickenBarGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '0%', stopColor: '#F59E0B', stopOpacity: 0.9 }),
+                          React.createElement('stop', { key: 'stop2', offset: '100%', stopColor: '#D97706', stopOpacity: 0.8 })
+                        ]),
+                        React.createElement('linearGradient', { key: 'fishBarGrad', id: 'fishBarGradient', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                          React.createElement('stop', { key: 'stop1', offset: '0%', stopColor: '#06B6D4', stopOpacity: 0.9 }),
+                          React.createElement('stop', { key: 'stop2', offset: '100%', stopColor: '#0891B2', stopOpacity: 0.8 })
+                        ])
+                      ]),
+                      React.createElement(CartesianGrid, { 
+                        key: 'grid', 
+                        strokeDasharray: "1 3", 
+                        stroke: "#E5E7EB",
+                        opacity: 0.6,
+                        vertical: false
+                      }),
+                      React.createElement(XAxis, { 
+                        key: 'xaxis', 
+                        dataKey: "year", 
+                        stroke: "#6B7280",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        tick: { fill: '#374151' }
+                      }),
+                      React.createElement(YAxis, { 
+                        key: 'yaxis', 
+                        stroke: "#6B7280", 
+                        tickFormatter: formatNumber,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        tick: { fill: '#6B7280' }
+                      }),
+                      React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                      React.createElement(Legend, { 
+                        key: 'legend',
+                        wrapperStyle: { paddingTop: '20px', fontSize: '14px', fontWeight: '600' }
+                      }),
+                      React.createElement(Bar, { 
+                        key: 'veg-bar', 
+                        dataKey: "veg", 
+                        fill: "url(#vegBarGradient)", 
+                        name: "Vegetarian Rotti",
+                        radius: [4, 4, 0, 0],
+                        stroke: '#10B981',
+                        strokeWidth: 1
+                      }),
+                      React.createElement(Bar, { 
+                        key: 'chicken-bar', 
+                        dataKey: "chicken", 
+                        fill: "url(#chickenBarGradient)", 
+                        name: "Chicken Rotti",
+                        radius: [4, 4, 0, 0],
+                        stroke: '#F59E0B',
+                        strokeWidth: 1
+                      }),
+                      React.createElement(Bar, { 
+                        key: 'fish-bar', 
+                        dataKey: "fish", 
+                        fill: "url(#fishBarGradient)", 
+                        name: "Fish Rotti",
+                        radius: [4, 4, 0, 0],
+                        stroke: '#06B6D4',
+                        strokeWidth: 1
+                      })
+                    ])
+                  )
+                )
+              ]),
+
+              // Year-by-Year Breakdown Charts
+              React.createElement('div', { key: 'yearly-breakdown', className: "mb-8" }, [
+                React.createElement('h2', {
+                  key: 'breakdown-title',
+                  className: "text-2xl font-bold mb-8 text-center text-white gradient-text"
+                }, 'Year-by-Year Product Analysis'),
+                
+                React.createElement('div', { key: 'breakdown-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
+                  // 2022 Chart
+                  React.createElement('div', { key: '2022-chart', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                    React.createElement('h3', {
+                      key: '2022-title',
+                      className: "text-xl font-bold mb-6 gradient-text text-center"
+                    }, '2022 Monthly Performance'),
+                    React.createElement('div', { key: '2022-container', style: { width: '100%', height: '400px' } },
+                      React.createElement(ResponsiveContainer, {},
+                        React.createElement(LineChart, { 
+                          data: cleanData.filter(item => item.month.includes('2022')), 
+                          margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                        }, [
+                          React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                          React.createElement(XAxis, { 
+                            key: 'xaxis',
+                            dataKey: "month", 
+                            stroke: "#6B7280",
+                            angle: -45,
+                            textAnchor: "end",
+                            height: 80,
+                            fontSize: 10,
+                            fontWeight: 500
+                          }),
+                          React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                          React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                          React.createElement(Legend, { key: 'legend', wrapperStyle: { paddingTop: '15px', fontSize: '13px', fontWeight: '500' } }),
+                          React.createElement(Line, {
+                            key: 'veg-line',
+                            type: "monotone",
+                            dataKey: "veg",
+                            stroke: "#10B981",
+                            strokeWidth: 3,
+                            name: "Vegetarian Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'chicken-line',
+                            type: "monotone",
+                            dataKey: "chicken",
+                            stroke: "#F59E0B",
+                            strokeWidth: 3,
+                            name: "Chicken Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'fish-line',
+                            type: "monotone",
+                            dataKey: "fish",
+                            stroke: "#06B6D4",
+                            strokeWidth: 3,
+                            name: "Fish Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                          })
+                        ])
+                      )
+                    )
+                  ]),
+
+                  // 2023 Chart
+                  React.createElement('div', { key: '2023-chart', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                    React.createElement('h3', {
+                      key: '2023-title',
+                      className: "text-xl font-bold mb-6 gradient-text text-center"
+                    }, '2023 Monthly Performance'),
+                    React.createElement('div', { key: '2023-container', style: { width: '100%', height: '400px' } },
+                      React.createElement(ResponsiveContainer, {},
+                        React.createElement(LineChart, { 
+                          data: cleanData.filter(item => item.month.includes('2023')), 
+                          margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                        }, [
+                          React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                          React.createElement(XAxis, { 
+                            key: 'xaxis',
+                            dataKey: "month", 
+                            stroke: "#6B7280",
+                            angle: -45,
+                            textAnchor: "end",
+                            height: 80,
+                            fontSize: 10,
+                            fontWeight: 500
+                          }),
+                          React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                          React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                          React.createElement(Legend, { key: 'legend', wrapperStyle: { paddingTop: '15px', fontSize: '13px', fontWeight: '500' } }),
+                          React.createElement(Line, {
+                            key: 'veg-line',
+                            type: "monotone",
+                            dataKey: "veg",
+                            stroke: "#10B981",
+                            strokeWidth: 3,
+                            name: "Vegetarian Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'chicken-line',
+                            type: "monotone",
+                            dataKey: "chicken",
+                            stroke: "#F59E0B",
+                            strokeWidth: 3,
+                            name: "Chicken Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'fish-line',
+                            type: "monotone",
+                            dataKey: "fish",
+                            stroke: "#06B6D4",
+                            strokeWidth: 3,
+                            name: "Fish Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                          })
+                        ])
+                      )
+                    )
+                  ]),
+
+                  // 2024 Chart
+                  React.createElement('div', { key: '2024-chart', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                    React.createElement('h3', {
+                      key: '2024-title',
+                      className: "text-xl font-bold mb-6 gradient-text text-center"
+                    }, '2024 Monthly Performance'),
+                    React.createElement('div', { key: '2024-container', style: { width: '100%', height: '400px' } },
+                      React.createElement(ResponsiveContainer, {},
+                        React.createElement(LineChart, { 
+                          data: cleanData.filter(item => item.month.includes('2024')), 
+                          margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                        }, [
+                          React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                          React.createElement(XAxis, { 
+                            key: 'xaxis',
+                            dataKey: "month", 
+                            stroke: "#6B7280",
+                            angle: -45,
+                            textAnchor: "end",
+                            height: 80,
+                            fontSize: 10,
+                            fontWeight: 500
+                          }),
+                          React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                          React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                          React.createElement(Legend, { key: 'legend', wrapperStyle: { paddingTop: '15px', fontSize: '13px', fontWeight: '500' } }),
+                          React.createElement(Line, {
+                            key: 'veg-line',
+                            type: "monotone",
+                            dataKey: "veg",
+                            stroke: "#10B981",
+                            strokeWidth: 3,
+                            name: "Vegetarian Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'chicken-line',
+                            type: "monotone",
+                            dataKey: "chicken",
+                            stroke: "#F59E0B",
+                            strokeWidth: 3,
+                            name: "Chicken Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'fish-line',
+                            type: "monotone",
+                            dataKey: "fish",
+                            stroke: "#06B6D4",
+                            strokeWidth: 3,
+                            name: "Fish Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                          })
+                        ])
+                      )
+                    )
+                  ]),
+
+                  // 2025 Chart (partial year)
+                  React.createElement('div', { key: '2025-chart', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                    React.createElement('h3', {
+                      key: '2025-title',
+                      className: "text-xl font-bold mb-6 gradient-text text-center"
+                    }, '2025 Monthly Performance (Partial Year)'),
+                    React.createElement('div', { key: '2025-container', style: { width: '100%', height: '400px' } },
+                      React.createElement(ResponsiveContainer, {},
+                        React.createElement(LineChart, { 
+                          data: cleanData.filter(item => item.month.includes('2025')), 
+                          margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                        }, [
+                          React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                          React.createElement(XAxis, { 
+                            key: 'xaxis',
+                            dataKey: "month", 
+                            stroke: "#6B7280",
+                            angle: -45,
+                            textAnchor: "end",
+                            height: 80,
+                            fontSize: 10,
+                            fontWeight: 500
+                          }),
+                          React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                          React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                          React.createElement(Legend, { key: 'legend', wrapperStyle: { paddingTop: '15px', fontSize: '13px', fontWeight: '500' } }),
+                          React.createElement(Line, {
+                            key: 'veg-line',
+                            type: "monotone",
+                            dataKey: "veg",
+                            stroke: "#10B981",
+                            strokeWidth: 3,
+                            name: "Vegetarian Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'chicken-line',
+                            type: "monotone",
+                            dataKey: "chicken",
+                            stroke: "#F59E0B",
+                            strokeWidth: 3,
+                            name: "Chicken Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                          }),
+                          React.createElement(Line, {
+                            key: 'fish-line',
+                            type: "monotone",
+                            dataKey: "fish",
+                            stroke: "#06B6D4",
+                            strokeWidth: 3,
+                            name: "Fish Rotti",
+                            connectNulls: false,
+                            dot: { r: 4, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                            activeDot: { r: 6, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                          })
+                        ])
+                      )
+                    )
+                  ])
+                ])
+              ]),
+
+              // Year-by-Year Individual Product Charts
+              React.createElement('div', { key: 'yearly-individual', className: "mb-8" }, [
+                React.createElement('h2', {
+                  key: 'individual-breakdown-title',
+                  className: "text-2xl font-bold mb-8 text-center text-white gradient-text"
+                }, 'Individual Product Performance by Year'),
+                
+                // Vegetarian Rotti Year-by-Year
+                React.createElement('div', { key: 'veg-yearly-section', className: "mb-12" }, [
+                  React.createElement('h3', {
+                    key: 'veg-yearly-title',
+                    className: "text-xl font-bold mb-6 text-center text-emerald-300"
+                  }, '🥬 Vegetarian Rotti - Year by Year Analysis'),
+                  React.createElement('div', { key: 'veg-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
+                    // Veg 2022
+                    React.createElement('div', { key: 'veg-2022', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'veg-2022-title',
+                        className: "text-lg font-bold mb-4 text-emerald-700 text-center"
+                      }, 'Vegetarian Rotti - 2022'),
+                      React.createElement('div', { key: 'veg-2022-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2022')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'vegArea2022', id: 'vegArea2022', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "none",
+                              fill: "url(#vegArea2022)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "#10B981",
+                              strokeWidth: 4,
+                              name: "Vegetarian Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Veg 2023
+                    React.createElement('div', { key: 'veg-2023', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'veg-2023-title',
+                        className: "text-lg font-bold mb-4 text-emerald-700 text-center"
+                      }, 'Vegetarian Rotti - 2023'),
+                      React.createElement('div', { key: 'veg-2023-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2023')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'vegArea2023', id: 'vegArea2023', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "none",
+                              fill: "url(#vegArea2023)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "#10B981",
+                              strokeWidth: 4,
+                              name: "Vegetarian Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Veg 2024
+                    React.createElement('div', { key: 'veg-2024', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'veg-2024-title',
+                        className: "text-lg font-bold mb-4 text-emerald-700 text-center"
+                      }, 'Vegetarian Rotti - 2024'),
+                      React.createElement('div', { key: 'veg-2024-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2024')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'vegArea2024', id: 'vegArea2024', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "none",
+                              fill: "url(#vegArea2024)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "#10B981",
+                              strokeWidth: 4,
+                              name: "Vegetarian Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Veg 2025
+                    React.createElement('div', { key: 'veg-2025', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'veg-2025-title',
+                        className: "text-lg font-bold mb-4 text-emerald-700 text-center"
+                      }, 'Vegetarian Rotti - 2025 (Partial)'),
+                      React.createElement('div', { key: 'veg-2025-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2025')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'vegArea2025', id: 'vegArea2025', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#10B981', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#10B981', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "none",
+                              fill: "url(#vegArea2025)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "veg",
+                              stroke: "#10B981",
+                              strokeWidth: 4,
+                              name: "Vegetarian Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#059669', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ])
+                  ])
+                ]),
+
+                // Chicken Rotti Year-by-Year
+                React.createElement('div', { key: 'chicken-yearly-section', className: "mb-12" }, [
+                  React.createElement('h3', {
+                    key: 'chicken-yearly-title',
+                    className: "text-xl font-bold mb-6 text-center text-amber-300"
+                  }, '🍗 Chicken Rotti - Year by Year Analysis'),
+                  React.createElement('div', { key: 'chicken-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
+                    // Chicken 2022
+                    React.createElement('div', { key: 'chicken-2022', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'chicken-2022-title',
+                        className: "text-lg font-bold mb-4 text-amber-700 text-center"
+                      }, 'Chicken Rotti - 2022'),
+                      React.createElement('div', { key: 'chicken-2022-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2022')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'chickenArea2022', id: 'chickenArea2022', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "none",
+                              fill: "url(#chickenArea2022)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "#F59E0B",
+                              strokeWidth: 4,
+                              name: "Chicken Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Chicken 2023
+                    React.createElement('div', { key: 'chicken-2023', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'chicken-2023-title',
+                        className: "text-lg font-bold mb-4 text-amber-700 text-center"
+                      }, 'Chicken Rotti - 2023'),
+                      React.createElement('div', { key: 'chicken-2023-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2023')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'chickenArea2023', id: 'chickenArea2023', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "none",
+                              fill: "url(#chickenArea2023)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "#F59E0B",
+                              strokeWidth: 4,
+                              name: "Chicken Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Chicken 2024
+                    React.createElement('div', { key: 'chicken-2024', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'chicken-2024-title',
+                        className: "text-lg font-bold mb-4 text-amber-700 text-center"
+                      }, 'Chicken Rotti - 2024'),
+                      React.createElement('div', { key: 'chicken-2024-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2024')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'chickenArea2024', id: 'chickenArea2024', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "none",
+                              fill: "url(#chickenArea2024)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "#F59E0B",
+                              strokeWidth: 4,
+                              name: "Chicken Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Chicken 2025
+                    React.createElement('div', { key: 'chicken-2025', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'chicken-2025-title',
+                        className: "text-lg font-bold mb-4 text-amber-700 text-center"
+                      }, 'Chicken Rotti - 2025 (Partial)'),
+                      React.createElement('div', { key: 'chicken-2025-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2025')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'chickenArea2025', id: 'chickenArea2025', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#F59E0B', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#F59E0B', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "none",
+                              fill: "url(#chickenArea2025)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "chicken",
+                              stroke: "#F59E0B",
+                              strokeWidth: 4,
+                              name: "Chicken Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#F59E0B', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#D97706', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ])
+                  ])
+                ]),
+
+                // Fish Rotti Year-by-Year
+                React.createElement('div', { key: 'fish-yearly-section', className: "mb-12" }, [
+                  React.createElement('h3', {
+                    key: 'fish-yearly-title',
+                    className: "text-xl font-bold mb-6 text-center text-cyan-300"
+                  }, '🐟 Fish Rotti - Year by Year Analysis'),
+                  React.createElement('div', { key: 'fish-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
+                    // Fish 2022
+                    React.createElement('div', { key: 'fish-2022', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'fish-2022-title',
+                        className: "text-lg font-bold mb-4 text-cyan-700 text-center"
+                      }, 'Fish Rotti - 2022'),
+                      React.createElement('div', { key: 'fish-2022-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2022')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'fishArea2022', id: 'fishArea2022', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "none",
+                              fill: "url(#fishArea2022)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "#06B6D4",
+                              strokeWidth: 4,
+                              name: "Fish Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Fish 2023
+                    React.createElement('div', { key: 'fish-2023', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'fish-2023-title',
+                        className: "text-lg font-bold mb-4 text-cyan-700 text-center"
+                      }, 'Fish Rotti - 2023'),
+                      React.createElement('div', { key: 'fish-2023-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2023')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'fishArea2023', id: 'fishArea2023', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "none",
+                              fill: "url(#fishArea2023)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "#06B6D4",
+                              strokeWidth: 4,
+                              name: "Fish Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Fish 2024
+                    React.createElement('div', { key: 'fish-2024', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'fish-2024-title',
+                        className: "text-lg font-bold mb-4 text-cyan-700 text-center"
+                      }, 'Fish Rotti - 2024'),
+                      React.createElement('div', { key: 'fish-2024-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2024')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'fishArea2024', id: 'fishArea2024', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "none",
+                              fill: "url(#fishArea2024)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "#06B6D4",
+                              strokeWidth: 4,
+                              name: "Fish Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ]),
+                    // Fish 2025
+                    React.createElement('div', { key: 'fish-2025', className: "chart-container rounded-xl shadow-2xl p-8 hover-scale" }, [
+                      React.createElement('h4', {
+                        key: 'fish-2025-title',
+                        className: "text-lg font-bold mb-4 text-cyan-700 text-center"
+                      }, 'Fish Rotti - 2025 (Partial)'),
+                      React.createElement('div', { key: 'fish-2025-container', style: { width: '100%', height: '450px' } },
+                        React.createElement(ResponsiveContainer, {},
+                          React.createElement(LineChart, { 
+                            data: cleanData.filter(item => item.month.includes('2025')), 
+                            margin: { top: 20, right: 30, left: 20, bottom: 60 }
+                          }, [
+                            React.createElement('defs', { key: 'defs' }, [
+                              React.createElement('linearGradient', { key: 'fishArea2025', id: 'fishArea2025', x1: '0', y1: '0', x2: '0', y2: '1' }, [
+                                React.createElement('stop', { key: 'stop1', offset: '5%', stopColor: '#06B6D4', stopOpacity: 0.4 }),
+                                React.createElement('stop', { key: 'stop2', offset: '95%', stopColor: '#06B6D4', stopOpacity: 0.1 })
+                              ])
+                            ]),
+                            React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: "1 3", stroke: "#E5E7EB", opacity: 0.6 }),
+                            React.createElement(XAxis, { 
+                              key: 'xaxis',
+                              dataKey: "month", 
+                              stroke: "#6B7280",
+                              angle: -45,
+                              textAnchor: "end",
+                              height: 80,
+                              fontSize: 10,
+                              fontWeight: 500
+                            }),
+                            React.createElement(YAxis, { key: 'yaxis', stroke: "#6B7280", tickFormatter: formatNumber, fontSize: 11, fontWeight: 500 }),
+                            React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+                            React.createElement(Area, {
+                              key: 'area',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "none",
+                              fill: "url(#fishArea2025)",
+                              connectNulls: false
+                            }),
+                            React.createElement(Line, {
+                              key: 'line',
+                              type: "monotone",
+                              dataKey: "fish",
+                              stroke: "#06B6D4",
+                              strokeWidth: 4,
+                              name: "Fish Rotti",
+                              connectNulls: false,
+                              dot: { r: 5, fill: '#06B6D4', strokeWidth: 2, stroke: '#fff' },
+                              activeDot: { r: 7, fill: '#0891B2', strokeWidth: 3, stroke: '#fff' }
+                            })
+                          ])
+                        )
+                      )
+                    ])
+                  ])
+                ])
+              ]),
+
+              // Key Insights - Enhanced Cards
+              React.createElement('div', { key: 'insights', className: "grid grid-cols-1 md:grid-cols-3 gap-8" }, [
+                React.createElement('div', { key: 'veg-insight', className: "chart-container rounded-xl shadow-xl p-6 hover-scale border-l-4 border-emerald-500" }, [
+                  React.createElement('div', { key: 'icon', className: "w-12 h-12 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg flex items-center justify-center mb-4" }, [
+                    React.createElement('span', { key: 'emoji', className: "text-2xl" }, '🥬')
+                  ]),
+                  React.createElement('h3', { key: 'title', className: "text-xl font-bold text-emerald-800 mb-2" }, 'Vegetarian Rotti'),
+                  React.createElement('p', { key: 'desc', className: "text-emerald-700 text-sm mb-3" }, 'Consistently highest sales volume'),
+                  React.createElement('p', { key: 'value', className: "text-4xl font-bold text-emerald-800 mb-1" }, '36.8k'),
+                  React.createElement('p', { key: 'peak', className: "text-sm text-emerald-600 font-medium" }, 'Peak: Mar 2025')
+                ]),
+                React.createElement('div', { key: 'chicken-insight', className: "chart-container rounded-xl shadow-xl p-6 hover-scale border-l-4 border-amber-500" }, [
+                  React.createElement('div', { key: 'icon', className: "w-12 h-12 bg-gradient-to-r from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mb-4" }, [
+                    React.createElement('span', { key: 'emoji', className: "text-2xl" }, '🍗')
+                  ]),
+                  React.createElement('h3', { key: 'title', className: "text-xl font-bold text-amber-800 mb-2" }, 'Chicken Rotti'),
+                  React.createElement('p', { key: 'desc', className: "text-amber-700 text-sm mb-3" }, 'Strong growth trajectory'),
+                  React.createElement('p', { key: 'value', className: "text-4xl font-bold text-amber-800 mb-1" }, '35.6k'),
+                  React.createElement('p', { key: 'peak', className: "text-sm text-amber-600 font-medium" }, 'Peak: Mar 2025')
+                ]),
+                React.createElement('div', { key: 'fish-insight', className: "chart-container rounded-xl shadow-xl p-6 hover-scale border-l-4 border-cyan-500" }, [
+                  React.createElement('div', { key: 'icon', className: "w-12 h-12 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center mb-4" }, [
+                    React.createElement('span', { key: 'emoji', className: "text-2xl" }, '🐟')
+                  ]),
+                  React.createElement('h3', { key: 'title', className: "text-xl font-bold text-cyan-800 mb-2" }, 'Fish Rotti'),
+                  React.createElement('p', { key: 'desc', className: "text-cyan-700 text-sm mb-3" }, 'Steady moderate performance'),
+                  React.createElement('p', { key: 'value', className: "text-4xl font-bold text-cyan-800 mb-1" }, '33.1k'),
+                  React.createElement('p', { key: 'peak', className: "text-sm text-cyan-600 font-medium" }, 'Peak: Jan 2025')
                 ])
               ])
             ])
           ]);
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(RottiGraphs));
+          const root = ReactDOM.createRoot(document.getElementById('root'));
+          root.render(React.createElement(RottiGraphs));
+        }
+
+        // Try to initialize immediately
+        if (document.readyState === 'complete') {
+          setTimeout(initializeApp, 100);
+        } else {
+          window.addEventListener('load', function() {
+            setTimeout(initializeApp, 100);
+          });
+        }
     </script>
 </body>
 </html>
