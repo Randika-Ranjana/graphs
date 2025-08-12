@@ -244,7 +244,11 @@
             React.createElement('div', { key: 'container', className: "max-w-7xl mx-auto animate-fade-in" }, [
               React.createElement('h1', {
                 key: 'title',
-                className: "text-4xl font-bold text-center mb-12 text-white gradient-text"
+                className: "text-5xl font-black text-center mb-12 text-white drop-shadow-lg",
+                style: { 
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.3)',
+                  letterSpacing: '1px'
+                }
               }, 'Rotti Sales Analytics Dashboard'),
               
 
@@ -253,9 +257,13 @@
               React.createElement('div', { key: 'main-chart', className: "chart-container rounded-xl shadow-2xl p-8 mb-8 hover-scale" }, [
                 React.createElement('h2', {
                   key: 'main-title',
-                  className: "text-2xl font-bold mb-6 gradient-text"
+                  className: "text-3xl font-bold mb-6 text-gray-800 text-center",
+                  style: { 
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                    letterSpacing: '0.5px'
+                  }
                 }, 'Monthly Sales Trends (2022-2025)'),
-                React.createElement('div', { key: 'main-chart-container', style: { width: '100%', height: '600px' } },
+                React.createElement('div', { key: 'main-chart-container', style: { width: '100%', height: '550px' } },
                   React.createElement(ResponsiveContainer, {},
                     React.createElement(LineChart, { 
                       data: cleanData, 
@@ -351,7 +359,7 @@
                     key: 'veg-title',
                     className: "text-xl font-bold mb-4 text-emerald-700 border-b-2 border-emerald-200 pb-3"
                   }, 'Vegetarian Rotti (611 & 651)'),
-                  React.createElement('div', { key: 'veg-chart-container', style: { width: '100%', height: '500px' } },
+                  React.createElement('div', { key: 'veg-chart-container', style: { width: '100%', height: '420px' } },
                     React.createElement(ResponsiveContainer, {},
                       React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
                         React.createElement('defs', { key: 'defs' }, [
@@ -419,7 +427,7 @@
                     key: 'chicken-title',
                     className: "text-xl font-bold mb-4 text-amber-700 border-b-2 border-amber-200 pb-3"
                   }, 'Chicken Rotti (618 & 649)'),
-                  React.createElement('div', { key: 'chicken-chart-container', style: { width: '100%', height: '500px' } },
+                  React.createElement('div', { key: 'chicken-chart-container', style: { width: '100%', height: '420px' } },
                     React.createElement(ResponsiveContainer, {},
                       React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
                         React.createElement('defs', { key: 'defs' }, [
@@ -487,7 +495,7 @@
                     key: 'fish-title',
                     className: "text-xl font-bold mb-4 text-cyan-700 border-b-2 border-cyan-200 pb-3"
                   }, 'Fish Rotti (604 & 933)'),
-                  React.createElement('div', { key: 'fish-chart-container', style: { width: '100%', height: '500px' } },
+                  React.createElement('div', { key: 'fish-chart-container', style: { width: '100%', height: '420px' } },
                     React.createElement(ResponsiveContainer, {},
                       React.createElement(LineChart, { data: cleanData, margin: { top: 15, right: 15, left: 15, bottom: 50 } }, [
                         React.createElement('defs', { key: 'defs' }, [
@@ -554,9 +562,13 @@
               React.createElement('div', { key: 'yearly-summary', className: "chart-container rounded-xl shadow-2xl p-8 mb-8 hover-scale" }, [
                 React.createElement('h2', {
                   key: 'yearly-title',
-                  className: "text-2xl font-bold mb-6 gradient-text text-center"
+                  className: "text-3xl font-bold mb-6 text-gray-800 text-center",
+                  style: { 
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                    letterSpacing: '0.5px'
+                  }
                 }, 'Yearly Sales Summary'),
-                React.createElement('div', { key: 'yearly-chart-container', style: { width: '100%', height: '500px' } },
+                React.createElement('div', { key: 'yearly-chart-container', style: { width: '100%', height: '360px' } },
                   React.createElement(ResponsiveContainer, {},
                     React.createElement(BarChart, { 
                       data: yearlyData, 
@@ -641,7 +653,11 @@
               React.createElement('div', { key: 'yearly-breakdown', className: "mb-8" }, [
                 React.createElement('h2', {
                   key: 'breakdown-title',
-                  className: "text-2xl font-bold mb-8 text-center text-white gradient-text"
+                  className: "text-4xl font-bold mb-8 text-center text-white",
+                  style: { 
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.7), 0 0 15px rgba(255,255,255,0.2)',
+                    letterSpacing: '1px'
+                  }
                 }, 'Year-by-Year Product Analysis'),
                 
                 React.createElement('div', { key: 'breakdown-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
@@ -651,7 +667,7 @@
                       key: '2022-title',
                       className: "text-xl font-bold mb-6 gradient-text text-center"
                     }, '2022 Monthly Performance'),
-                    React.createElement('div', { key: '2022-container', style: { width: '100%', height: '400px' } },
+                    React.createElement('div', { key: '2022-container', style: { width: '100%', height: '380px' } },
                       React.createElement(ResponsiveContainer, {},
                         React.createElement(LineChart, { 
                           data: cleanData.filter(item => item.month.includes('2022')), 
@@ -715,7 +731,7 @@
                       key: '2023-title',
                       className: "text-xl font-bold mb-6 gradient-text text-center"
                     }, '2023 Monthly Performance'),
-                    React.createElement('div', { key: '2023-container', style: { width: '100%', height: '400px' } },
+                    React.createElement('div', { key: '2023-container', style: { width: '100%', height: '380px' } },
                       React.createElement(ResponsiveContainer, {},
                         React.createElement(LineChart, { 
                           data: cleanData.filter(item => item.month.includes('2023')), 
@@ -779,7 +795,7 @@
                       key: '2024-title',
                       className: "text-xl font-bold mb-6 gradient-text text-center"
                     }, '2024 Monthly Performance'),
-                    React.createElement('div', { key: '2024-container', style: { width: '100%', height: '400px' } },
+                    React.createElement('div', { key: '2024-container', style: { width: '100%', height: '380px' } },
                       React.createElement(ResponsiveContainer, {},
                         React.createElement(LineChart, { 
                           data: cleanData.filter(item => item.month.includes('2024')), 
@@ -843,7 +859,7 @@
                       key: '2025-title',
                       className: "text-xl font-bold mb-6 gradient-text text-center"
                     }, '2025 Monthly Performance (Partial Year)'),
-                    React.createElement('div', { key: '2025-container', style: { width: '100%', height: '400px' } },
+                    React.createElement('div', { key: '2025-container', style: { width: '100%', height: '380px' } },
                       React.createElement(ResponsiveContainer, {},
                         React.createElement(LineChart, { 
                           data: cleanData.filter(item => item.month.includes('2025')), 
@@ -907,14 +923,22 @@
               React.createElement('div', { key: 'yearly-individual', className: "mb-8" }, [
                 React.createElement('h2', {
                   key: 'individual-breakdown-title',
-                  className: "text-2xl font-bold mb-8 text-center text-white gradient-text"
+                  className: "text-4xl font-bold mb-8 text-center text-white",
+                  style: { 
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.7), 0 0 15px rgba(255,255,255,0.2)',
+                    letterSpacing: '1px'
+                  }
                 }, 'Individual Product Performance by Year'),
                 
                 // Vegetarian Rotti Year-by-Year
                 React.createElement('div', { key: 'veg-yearly-section', className: "mb-12" }, [
                   React.createElement('h3', {
                     key: 'veg-yearly-title',
-                    className: "text-xl font-bold mb-6 text-center text-emerald-300"
+                    className: "text-3xl font-bold mb-6 text-center text-emerald-200",
+                    style: { 
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.6)',
+                      letterSpacing: '0.5px'
+                    }
                   }, '🥬 Vegetarian Rotti - Year by Year Analysis'),
                   React.createElement('div', { key: 'veg-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
                     // Veg 2022
@@ -923,7 +947,7 @@
                         key: 'veg-2022-title',
                         className: "text-lg font-bold mb-4 text-emerald-700 text-center"
                       }, 'Vegetarian Rotti - 2022'),
-                      React.createElement('div', { key: 'veg-2022-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'veg-2022-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2022')), 
@@ -977,7 +1001,7 @@
                         key: 'veg-2023-title',
                         className: "text-lg font-bold mb-4 text-emerald-700 text-center"
                       }, 'Vegetarian Rotti - 2023'),
-                      React.createElement('div', { key: 'veg-2023-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'veg-2023-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2023')), 
@@ -1031,7 +1055,7 @@
                         key: 'veg-2024-title',
                         className: "text-lg font-bold mb-4 text-emerald-700 text-center"
                       }, 'Vegetarian Rotti - 2024'),
-                      React.createElement('div', { key: 'veg-2024-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'veg-2024-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2024')), 
@@ -1085,7 +1109,7 @@
                         key: 'veg-2025-title',
                         className: "text-lg font-bold mb-4 text-emerald-700 text-center"
                       }, 'Vegetarian Rotti - 2025 (Partial)'),
-                      React.createElement('div', { key: 'veg-2025-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'veg-2025-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2025')), 
@@ -1140,7 +1164,11 @@
                 React.createElement('div', { key: 'chicken-yearly-section', className: "mb-12" }, [
                   React.createElement('h3', {
                     key: 'chicken-yearly-title',
-                    className: "text-xl font-bold mb-6 text-center text-amber-300"
+                    className: "text-3xl font-bold mb-6 text-center text-amber-200",
+                    style: { 
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.6)',
+                      letterSpacing: '0.5px'
+                    }
                   }, '🍗 Chicken Rotti - Year by Year Analysis'),
                   React.createElement('div', { key: 'chicken-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
                     // Chicken 2022
@@ -1149,7 +1177,7 @@
                         key: 'chicken-2022-title',
                         className: "text-lg font-bold mb-4 text-amber-700 text-center"
                       }, 'Chicken Rotti - 2022'),
-                      React.createElement('div', { key: 'chicken-2022-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'chicken-2022-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2022')), 
@@ -1203,7 +1231,7 @@
                         key: 'chicken-2023-title',
                         className: "text-lg font-bold mb-4 text-amber-700 text-center"
                       }, 'Chicken Rotti - 2023'),
-                      React.createElement('div', { key: 'chicken-2023-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'chicken-2023-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2023')), 
@@ -1257,7 +1285,7 @@
                         key: 'chicken-2024-title',
                         className: "text-lg font-bold mb-4 text-amber-700 text-center"
                       }, 'Chicken Rotti - 2024'),
-                      React.createElement('div', { key: 'chicken-2024-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'chicken-2024-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2024')), 
@@ -1311,7 +1339,7 @@
                         key: 'chicken-2025-title',
                         className: "text-lg font-bold mb-4 text-amber-700 text-center"
                       }, 'Chicken Rotti - 2025 (Partial)'),
-                      React.createElement('div', { key: 'chicken-2025-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'chicken-2025-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2025')), 
@@ -1366,7 +1394,11 @@
                 React.createElement('div', { key: 'fish-yearly-section', className: "mb-12" }, [
                   React.createElement('h3', {
                     key: 'fish-yearly-title',
-                    className: "text-xl font-bold mb-6 text-center text-cyan-300"
+                    className: "text-3xl font-bold mb-6 text-center text-cyan-200",
+                    style: { 
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.6)',
+                      letterSpacing: '0.5px'
+                    }
                   }, '🐟 Fish Rotti - Year by Year Analysis'),
                   React.createElement('div', { key: 'fish-yearly-charts', className: "grid grid-cols-1 lg:grid-cols-2 gap-8" }, [
                     // Fish 2022
@@ -1375,7 +1407,7 @@
                         key: 'fish-2022-title',
                         className: "text-lg font-bold mb-4 text-cyan-700 text-center"
                       }, 'Fish Rotti - 2022'),
-                      React.createElement('div', { key: 'fish-2022-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'fish-2022-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2022')), 
@@ -1429,7 +1461,7 @@
                         key: 'fish-2023-title',
                         className: "text-lg font-bold mb-4 text-cyan-700 text-center"
                       }, 'Fish Rotti - 2023'),
-                      React.createElement('div', { key: 'fish-2023-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'fish-2023-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2023')), 
@@ -1483,7 +1515,7 @@
                         key: 'fish-2024-title',
                         className: "text-lg font-bold mb-4 text-cyan-700 text-center"
                       }, 'Fish Rotti - 2024'),
-                      React.createElement('div', { key: 'fish-2024-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'fish-2024-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2024')), 
@@ -1537,7 +1569,7 @@
                         key: 'fish-2025-title',
                         className: "text-lg font-bold mb-4 text-cyan-700 text-center"
                       }, 'Fish Rotti - 2025 (Partial)'),
-                      React.createElement('div', { key: 'fish-2025-container', style: { width: '100%', height: '450px' } },
+                      React.createElement('div', { key: 'fish-2025-container', style: { width: '100%', height: '360px' } },
                         React.createElement(ResponsiveContainer, {},
                           React.createElement(LineChart, { 
                             data: cleanData.filter(item => item.month.includes('2025')), 
